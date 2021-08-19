@@ -22,6 +22,24 @@ function sanitizeValue(value) {
 	}
 }
 
+function wp_get_username(cookies, wpurl)
+{
+        var md5 = crypto.createHash('md5');
+        md5.update(wpurl);
+        cookiename = 'wordpress_logged_in_' + md5.digest('hex');
+
+                cookies.split(';').forEach(function (cookie) {
+                        if (cookie.split('=')[0].trim() == cookiename)
+                                data = cookie.split('=')[1].trim().split('%7C');
+                });
+
+        if (!data) return "游客";
+
+        if (parseInt(data[1]) < new Date() / 1000)
+                return "游客";
+        return data[0]
+}
+
 function WP_Auth(
 	wpurl,
 	logged_in_key,
@@ -366,7 +384,7 @@ function Valid_Auth(data, auth) {
 		self.debug && console.log('++++++++++++++++++++++++++ hash from wp config::: ' , cookieHash)
 		self.debug && console.log('++++++++++++++++++++++++++++ hash from cookies::: ', hash)
 		if (hash == cookieHash) {
-			self.emit('auth', true, id);
+			self.emit('auth', true, id, "", user_login);
 		} else {
 			const userId = auth.skipAuthentication ? id : 0;
 			self.emit('auth', false, userId, 'invalid hash');
